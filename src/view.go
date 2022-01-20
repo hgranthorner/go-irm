@@ -7,13 +7,25 @@ func drawState(s State) {
 		fmt.Println("")
 	}
 
-	for i, file := range s.dirEntries {
-		firstCharacter := " "
+	for i, node := range s.nodes {
+		if node.file != nil {
+			firstCharacter := " "
 
-		if i == s.currentPosition.y {
-			firstCharacter = "*"
+			if i == s.y {
+				firstCharacter = "*"
+			}
+
+			symbol := "[ ]"
+
+			if node.file.IsDir() {
+				if node.open {
+					symbol = " v "
+				} else {
+					symbol = " > "
+				}
+			}
+
+			fmt.Printf("%s %s %s\n", firstCharacter, symbol, node.file.Name())
 		}
-
-		fmt.Printf("%s [ ] %s\n", firstCharacter, file.Name())
 	}
 }

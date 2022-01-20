@@ -2,22 +2,50 @@ package src
 
 import (
 	"io/fs"
+	"os"
 )
 
-type Coordinate struct {
-	x int
-	y int
+type Node struct {
+	file   fs.DirEntry
+	marked bool
+	open   bool
 }
 
 type State struct {
-	currentPosition Coordinate
-	dirEntries      []fs.DirEntry
+	y     int
+	nodes []Node
+}
+
+func initializeState() State {
+	currentDirectoryPath, _ := os.Getwd()
+	files, _ := os.ReadDir(currentDirectoryPath)
+	nodes := make([]Node, len(files))
+
+	for i, file := range files {
+		nodes[i] = Node{
+			file:   file,
+			marked: false,
+			open:   false,
+		}
+	}
+
+	state := State{
+		y:     0,
+		nodes: nodes,
+	}
+	return state
 }
 
 func (s *State) moveCursorUp() {
-	s.currentPosition.y = s.currentPosition.y - 1
+	newY := s.y - 1
+	if newY >= 0 {
+		s.y = newY
+	}
 }
 
 func (s *State) moveCursorDown() {
-	s.currentPosition.y = s.currentPosition.y + 1
+	newY := s.y + 1
+	if newY < len(s.nodes) {
+		s.y = newY
+	}
 }

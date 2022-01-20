@@ -1,8 +1,6 @@
 package src
 
 import (
-	"fmt"
-	"os"
 	"syscall"
 )
 
@@ -29,27 +27,22 @@ func (r WindowsKeyReader) readKey(keyCode uintptr) bool {
 }
 
 func handleInput(keyChan <-chan byte) {
-	coordinate := Coordinate{0, 0}
-	currentDirectoryPath, _ := os.Getwd()
-	files, _ := os.ReadDir(currentDirectoryPath)
-
-	state := State{
-		currentPosition: coordinate,
-		dirEntries:      files,
+	// Sometimes random stuff shows up in the channel on initialization.
+	for len(keyChan) > 0 {
+		<-keyChan
 	}
+
+	state := initializeState()
+	drawState(state)
 
 	for true {
 		key := <-keyChan
 		if key == 'u' {
-			fmt.Println("up")
 			state.moveCursorUp()
-			fmt.Println(state.currentPosition.y)
 		}
 
 		if key == 'd' {
-			fmt.Println("down")
 			state.moveCursorDown()
-			fmt.Println(state.currentPosition.y)
 		}
 
 		drawState(state)
