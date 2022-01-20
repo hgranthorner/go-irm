@@ -27,11 +27,29 @@ func (r WindowsKeyReader) readKey(keyCode uintptr) bool {
 	return ret != 0
 }
 
+func handleInput(keyChan <-chan byte) {
+	for true {
+		key := <-keyChan
+		if key == 'u' {
+			fmt.Println("up")
+		}
+
+		if key == 'd' {
+			fmt.Println("down")
+		}
+	}
+}
+
 func Init() {
 	user32 := syscall.NewLazyDLL("user32.dll")
 	procGetAsyncKeyState := user32.NewProc("GetAsyncKeyState")
 
 	reader := WindowsKeyReader{dll: user32, getAsyncKeyState: procGetAsyncKeyState}
+
+	keyChan := make(chan byte)
+
+	go handleInput(keyChan)
+
 	shouldContinue := true
 	upPressed := false
 	downPressed := false
@@ -43,13 +61,13 @@ func Init() {
 
 		if reader.readKey(upArrowKey) && upPressed == false {
 			upPressed = true
-			fmt.Println("u")
+			keyChan <- 'u'
 			continue
 		}
 
 		if reader.readKey(downArrowKey) && downPressed == false {
 			downPressed = true
-			fmt.Println("d")
+			keyChan <- 'd'
 			continue
 		}
 
