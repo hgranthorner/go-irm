@@ -15,7 +15,7 @@ An interactive rm, for careful deleters.
 
 ## Spec
 
-- [ ] View files in directory
+- [X] View files in directory
 - [ ] Expand subdirectories
 - [ ] Mark files for deletion
 - [ ] Mark directories for deletion
