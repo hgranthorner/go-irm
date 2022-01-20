@@ -2,12 +2,13 @@ package src
 
 import (
 	"fmt"
+	"os"
 	"syscall"
 )
 
 var (
-	tabKey       = uintptr(0x09)
-	leftArrowKey = uintptr(0x25)
+	//tabKey       = uintptr(0x09)
+	//leftArrowKey = uintptr(0x25)
 	upArrowKey   = uintptr(0x26)
 	downArrowKey = uintptr(0x28)
 	qKey         = uintptr(0x51)
@@ -28,15 +29,30 @@ func (r WindowsKeyReader) readKey(keyCode uintptr) bool {
 }
 
 func handleInput(keyChan <-chan byte) {
+	coordinate := Coordinate{0, 0}
+	currentDirectoryPath, _ := os.Getwd()
+	files, _ := os.ReadDir(currentDirectoryPath)
+
+	state := State{
+		currentPosition: coordinate,
+		dirEntries:      files,
+	}
+
 	for true {
 		key := <-keyChan
 		if key == 'u' {
 			fmt.Println("up")
+			state.moveCursorUp()
+			fmt.Println(state.currentPosition.y)
 		}
 
 		if key == 'd' {
 			fmt.Println("down")
+			state.moveCursorDown()
+			fmt.Println(state.currentPosition.y)
 		}
+
+		drawState(state)
 	}
 }
 
