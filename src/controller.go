@@ -5,15 +5,14 @@ import (
 )
 
 var (
-	//tabKey       = uintptr(0x09)
-	//leftArrowKey = uintptr(0x25)
+	tabKey       = uintptr(0x09)
 	upArrowKey   = uintptr(0x26)
 	downArrowKey = uintptr(0x28)
 	qKey         = uintptr(0x51)
 )
 
 type KeyReader interface {
-	readKey(keyCode uintptr) uintptr
+	readKey(keyCode uintptr) bool
 }
 
 type WindowsKeyReader struct {
@@ -27,13 +26,14 @@ func (r WindowsKeyReader) readKey(keyCode uintptr) bool {
 }
 
 func handleInput(keyChan <-chan byte) {
+	state := initializeState()
+
+	drawState(state)
+
 	// Sometimes random stuff shows up in the channel on initialization.
 	for len(keyChan) > 0 {
 		<-keyChan
 	}
-
-	state := initializeState()
-	drawState(state)
 
 	for true {
 		key := <-keyChan
@@ -49,6 +49,20 @@ func handleInput(keyChan <-chan byte) {
 	}
 }
 
+func testKey(reader KeyReader, key uintptr, pressed *bool, val byte, ch chan byte) {
+	keyPressed := reader.readKey(key)
+
+	if keyPressed && *pressed == false {
+		*pressed = true
+		ch <- val
+	}
+
+	if !keyPressed {
+		*pressed = false
+	}
+
+}
+
 func Init() {
 	user32 := syscall.NewLazyDLL("user32.dll")
 	procGetAsyncKeyState := user32.NewProc("GetAsyncKeyState")
@@ -62,31 +76,15 @@ func Init() {
 	shouldContinue := true
 	upPressed := false
 	downPressed := false
+	tabPressed := false
 
 	for shouldContinue {
 		if reader.readKey(qKey) {
 			shouldContinue = false
 		}
 
-		if reader.readKey(upArrowKey) && upPressed == false {
-			upPressed = true
-			keyChan <- 'u'
-			continue
-		}
-
-		if reader.readKey(downArrowKey) && downPressed == false {
-			downPressed = true
-			keyChan <- 'd'
-			continue
-		}
-
-		if !reader.readKey(upArrowKey) {
-			upPressed = false
-		}
-
-		if !reader.readKey(downArrowKey) {
-			downPressed = false
-		}
-
+		testKey(reader, upArrowKey, &upPressed, 'u', keyChan)
+		testKey(reader, downArrowKey, &downPressed, 'd', keyChan)
+		testKey(reader, tabKey, &tabPressed, 't', keyChan)
 	}
 }
